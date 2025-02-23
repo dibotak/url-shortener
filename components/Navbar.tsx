@@ -1,6 +1,6 @@
-import DarkModeToggle from "../islands/DarkModeToggle.tsx";
+import DarkModeToggle, { type ThemeToggle } from "../islands/DarkModeToggle.tsx";
 
-export default function Navbar() {
+export default function Navbar({ defaultTheme }: ThemeToggle) {
   return (
     <nav class="bg-white dark:bg-gray-800 shadow-lg mb-8">
       <div class="max-w-7xl mx-auto px-4">
@@ -30,7 +30,7 @@ export default function Navbar() {
             >
               About
             </a>
-            <DarkModeToggle />
+            <DarkModeToggle defaultTheme={defaultTheme} />
           </div>
         </div>
       </div>

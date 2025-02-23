@@ -1,6 +1,10 @@
-import { Signal, signal } from "@preact/signals";
+import { signal, useSignal } from "@preact/signals";
 
-type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'system';
+
+export type ThemeToggle = {
+  defaultTheme: Theme
+}
 
 // Function to get theme from cookie
 function getThemeFromCookie(): Theme {
@@ -14,24 +18,26 @@ function getThemeFromCookie(): Theme {
 
 // Function to check if current system preference is dark
 function isSystemDark(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (typeof globalThis === 'undefined') return false;
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 // Function to set cookie
-function setCookie(theme: Theme) {
+function setCookie(theme: Theme, system: Theme) {
   document.cookie = `theme=${theme}; path=/; max-age=31536000; SameSite=Lax`; // 1 year expiry
+  document.cookie = `preferred-theme=${system}; path=/; max-age=31536000; SameSite=Lax`; // 1 year expiry
 }
 
 // Function to apply theme to document
 function applyTheme(theme: Theme) {
   const isDark = theme === 'dark' || (theme === 'system' && isSystemDark());
+  setCookie(theme, isDark ? 'dark' : 'light');
   document.documentElement.classList.toggle('dark', isDark);
 }
 
-export default function DarkModeToggle() {
+export default function DarkModeToggle({ defaultTheme }: ThemeToggle) {
   // Initialize theme state
-  const currentTheme = signal<Theme>(getThemeFromCookie());
+  const currentTheme = useSignal<Theme>(defaultTheme || getThemeFromCookie());
 
   // Apply theme immediately on component mount
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -41,7 +47,7 @@ export default function DarkModeToggle() {
     });
 
     // Set up system theme change listener
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', () => {
       if (currentTheme.value === 'system') {
         applyTheme('system');
@@ -51,7 +57,6 @@ export default function DarkModeToggle() {
 
   const setTheme = (newTheme: Theme) => {
     currentTheme.value = newTheme;
-    setCookie(newTheme);
     applyTheme(newTheme);
   };
 
